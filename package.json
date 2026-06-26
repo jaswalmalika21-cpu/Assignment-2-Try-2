@@ -1,0 +1,9 @@
+{
+  "name": "northpoint-growth-fund-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AFM 241 Assignment 2 — Northpoint Growth Fund portfolio dashboard (static front-end + Netlify functions for live Finnhub/Twelve Data quotes).",
+  "engines": {
+    "node": ">=18"
+  }
+}

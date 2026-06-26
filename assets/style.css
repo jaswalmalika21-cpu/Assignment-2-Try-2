@@ -1,0 +1,700 @@
+/* ==========================================================================
+   Northpoint Growth Fund — Dashboard styles (dark theme)
+   ========================================================================== */
+
+:root {
+  --bg: #0a0e1a;
+  --bg-soft: #0d1224;
+  --card: #121829;
+  --card-hover: #161d33;
+  --ink: #eef1f8;
+  --ink-soft: #9aa3bd;
+  --ink-faint: #5f6886;
+  --line: #232b46;
+  --line-soft: #1a2138;
+  --accent: #5b8cff;
+  --accent-soft: rgba(91, 140, 255, 0.14);
+  --green: #34d399;
+  --green-soft: rgba(52, 211, 153, 0.14);
+  --red: #fb7185;
+  --red-soft: rgba(251, 113, 133, 0.14);
+  --amber: #fbbf24;
+  --amber-soft: rgba(251, 191, 36, 0.14);
+  --radius: 12px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 28px -14px rgba(0, 0, 0, 0.6);
+  font-size: 15px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono { font-family: "Inter", sans-serif; }
+
+.page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 28px 32px 56px;
+}
+
+/* ---------------------------------- Header ---------------------------------- */
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 30px 34px;
+  margin-bottom: 22px;
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.05), transparent 60%);
+}
+
+.fund-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.fund-icon {
+  font-size: 38px;
+  color: var(--amber);
+  line-height: 1;
+}
+
+.fund-name {
+  font-weight: 800;
+  font-size: 42px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.fund-subtitle {
+  font-size: 16px;
+  color: var(--ink-soft);
+}
+
+.datetime-row {
+  font-family: "Inter", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot-sep { color: var(--ink-faint); }
+
+/* Market status pill ("blurb") — background/text color shift per state,
+   with the dot pulsing only while the market is actually open (live). */
+.market-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 6px 13px 6px 10px;
+  border-radius: 100px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--ink-soft);
+}
+.market-status.open {
+  background: var(--green-soft);
+  border-color: rgba(52, 211, 153, 0.3);
+  color: var(--green);
+}
+.market-status.closed {
+  background: var(--red-soft);
+  border-color: rgba(251, 113, 133, 0.3);
+  color: var(--red);
+}
+.market-status.after-hours {
+  background: var(--amber-soft);
+  border-color: rgba(251, 191, 36, 0.3);
+  color: var(--amber);
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  flex-shrink: 0;
+  position: relative;
+}
+.status-dot.closed { background: var(--red); }
+.status-dot.after-hours { background: var(--amber); }
+.status-dot.open {
+  background: var(--green);
+  animation: pulse-dot 1.8s ease-out infinite;
+}
+.status-dot.open::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse-ring 1.8s ease-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6); }
+  50% { box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15); }
+}
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(2.8); opacity: 0; }
+}
+
+.topbar-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--amber);
+  color: #08101f;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  margin-top: 8px;
+}
+.refresh-btn:hover { background: #ffce4d; }
+.refresh-btn:active { transform: translateY(1px); }
+.refresh-btn:disabled { opacity: 0.5; cursor: default; }
+.refresh-btn svg.spin { animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.last-sync {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+.last-sync span { color: var(--ink-soft); font-weight: 600; }
+
+/* ---------------------------------- KPI cards ---------------------------------- */
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+}
+
+.kpi-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.kpi-value {
+  font-family: "Inter", sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.kpi-sub {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+
+.kpi-sub.pos { color: var(--green); }
+.kpi-sub.neg { color: var(--red); }
+
+/* Compact stat strip — top mover/laggard + breadth, computed from data already
+   fetched for the table (no extra API calls). Kept to one slim row so it adds
+   insight without competing with the KPI cards for attention. */
+.stat-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.stat-pill {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  padding: 7px 14px;
+}
+.stat-pill strong { font-weight: 700; }
+.stat-pill strong.pos { color: var(--green); }
+.stat-pill strong.neg { color: var(--red); }
+
+/* ---------------------------------- Charts ---------------------------------- */
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.chart-card, .table-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px 16px;
+  box-shadow: var(--shadow);
+}
+
+.chart-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* Groups the source-tag + CSV button together on the right edge of the
+   Holdings header, instead of letting flex space-between center the
+   source-tag between the title and the button. */
+.chart-head-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.chart-head h2 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ink);
+}
+.chart-head h3 {
+  font-size: 13.5px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ink);
+}
+
+.source-tag {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-faint);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  padding: 3px 9px;
+  white-space: nowrap;
+}
+
+.chart-body { height: 260px; position: relative; }
+.chart-body--donut { height: 200px; }
+
+/* Range selector chips — used on the Portfolio Value chart and the
+   per-ticker modal price-history chart. */
+.range-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.range-btn {
+  font-family: "Inter", sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.range-btn:hover { background: var(--card-hover); color: var(--ink); }
+.range-btn.active {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #08101f;
+}
+.range-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.03);
+}
+.range-btn:disabled:hover { background: rgba(255, 255, 255, 0.03); color: var(--ink-soft); }
+
+.chart-note {
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin: 10px 2px 0;
+}
+
+.legend {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+.legend .swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.legend .legend-pct {
+  margin-left: auto;
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ---------------------------------- Table ---------------------------------- */
+
+.table-scroll { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+thead th {
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ink-faint);
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--line);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+thead th:hover { color: var(--ink); }
+thead th.num, td.num { text-align: right; }
+
+tbody td {
+  padding: 12px;
+  border-bottom: 1px solid var(--line-soft);
+  white-space: nowrap;
+  color: var(--ink);
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--card-hover); }
+
+.ticker-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.ticker-logo {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  object-fit: contain;
+  background: #fff;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.ticker-btn {
+  font-family: "Inter", sans-serif;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: none;
+  border-radius: 6px;
+  padding: 4px 9px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.ticker-btn:hover { filter: brightness(1.2); }
+
+.cell-mono { font-family: "Inter", sans-serif; }
+
+.sector-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pos { color: var(--green); font-weight: 600; }
+.neg { color: var(--red); font-weight: 600; }
+.cell-error { color: var(--red); font-weight: 600; font-size: 12px; }
+
+.table-hint {
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin: -6px 0 14px;
+}
+
+.csv-btn {
+  font-family: "Inter", sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  padding: 5px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.csv-btn:hover { background: var(--card-hover); color: var(--ink); }
+
+.risk-banner-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+
+.risk-note {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ink-faint);
+  margin: 0;
+}
+.risk-note .risk-high { color: var(--red); font-weight: 700; }
+
+/* ---------------------------------- Disclaimer ---------------------------------- */
+
+.disclaimer {
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-faint);
+  text-align: left;
+}
+
+/* ---------------------------------- Modal ---------------------------------- */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 5, 12, 0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 100;
+  backdrop-filter: blur(3px);
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  max-width: 640px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px 28px 22px;
+  position: relative;
+  box-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.7);
+  animation: modalIn 0.16s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-close {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--ink-faint);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.modal-close:hover { background: var(--card-hover); color: var(--ink); }
+
+.modal-ticker-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.modal-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #fff;
+  padding: 3px;
+  flex-shrink: 0;
+}
+.modal-logo[src=""], .modal-logo:not([src]) { display: none; }
+.modal-ticker {
+  font-family: "Inter", sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.modal-company {
+  font-size: 15px;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.modal-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.modal-price {
+  font-family: "Inter", sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.modal-return { font-size: 14px; font-weight: 700; }
+
+.modal-meta-row {
+  font-size: 13px;
+  color: var(--ink-faint);
+  margin-bottom: 18px;
+  display: flex;
+  gap: 8px;
+}
+
+.modal-chart-card {
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.modal-chart-body { height: 220px; position: relative; }
+.modal-chart-error { color: var(--red); font-size: 12.5px; margin: 8px 2px 0; font-weight: 600; }
+
+.modal-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.modal-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.modal-stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ink-faint);
+  font-weight: 600;
+}
+.modal-stat-value {
+  font-family: "Inter", sans-serif;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.modal-source-tag {
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-bottom: 18px;
+}
+
+.modal-profile {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  margin-bottom: 14px;
+}
+.modal-profile-desc {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin: 0 0 10px;
+}
+.modal-profile-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+.modal-profile-link:hover { text-decoration: underline; }
+
+.modal-disclaimer {
+  font-size: 11.5px;
+  color: var(--ink-faint);
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  margin: 0;
+}
+
+/* ---------------------------------- Responsive ---------------------------------- */
+
+@media (max-width: 980px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .charts-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .page { padding: 18px 16px 40px; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpi-value { font-size: 20px; }
+  .topbar { flex-direction: column; }
+  .topbar-right { align-items: flex-start; }
+  .modal-stats-grid { grid-template-columns: 1fr 1fr; }
+}

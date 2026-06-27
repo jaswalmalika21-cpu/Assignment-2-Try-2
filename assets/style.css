@@ -244,39 +244,42 @@ html, body {
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
-  gap: 12px;
+  gap: 10px;
   margin-bottom: 20px;
 }
-/* Bumped up from the original compact 12.5px pill so the row reads as a
-   real stat bar rather than tiny chips — also means the AUM pill's text
-   takes up more of its own flex-grown width instead of leaving empty
-   padding around a small string. */
+/* Sized so all 5 pills (mover, laggard, breadth, risk, AUM) fit on one row
+   at the page's max-width — went smaller than the previous 15.5px pass
+   specifically because the full "$1,000,000" AUM text + wider letter/word
+   spacing pushed the row past one line and wrapped the AUM pill underneath. */
 .stat-pill {
   display: flex;
   align-items: center;
-  font-size: 15.5px;
+  font-size: 13.5px;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  word-spacing: 0.12em;
+  letter-spacing: 0.01em;
+  word-spacing: 0.04em;
   color: var(--ink-soft);
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 100px;
-  padding: 12px 20px;
+  padding: 9px 16px;
+  white-space: nowrap;
 }
-/* Extra breathing room between the label and the bold value (e.g. "Top
-   mover:" and "MSFT +1.2%") so the two don't read as one squeezed-together
-   word/number block at the larger pill font size. */
-.stat-pill strong { font-weight: 700; margin-left: 5px; letter-spacing: 0.03em; }
+/* Breathing room between the label and the bold value (e.g. "Top mover:"
+   and "MSFT +1.2%") so the two don't read as one squeezed-together word. */
+.stat-pill strong { font-weight: 700; margin-left: 4px; letter-spacing: 0.02em; }
 .stat-pill strong.pos { color: var(--green); }
 .stat-pill strong.neg { color: var(--red); }
 .stat-pill .risk-high { color: var(--red); font-weight: 700; margin-left: 5px; }
 /* Concentration-risk pill is short ("Concentration risk: High") and content-
    sized on purpose — the supporting math lives in its title tooltip instead
-   of stretching the pill's visible text. The AUM pill right after it (below)
-   is the one that grows to soak up the rest of the row. */
+   of stretching the pill's visible text. The AUM pill right after it grows
+   to soak up the rest of the row, but its flex-basis is kept small (rather
+   than its natural content width) so it shrinks instead of forcing the
+   whole row to wrap onto two lines when space is tight. */
 .stat-pill--fill {
-  flex: 1 1 200px;
+  flex: 1 1 120px;
+  justify-content: center;
 }
 
 /* ---------------------------------- Charts ---------------------------------- */

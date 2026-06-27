@@ -260,11 +260,12 @@ html, body {
 .stat-pill strong.pos { color: var(--green); }
 .stat-pill strong.neg { color: var(--red); }
 .stat-pill .risk-high { color: var(--red); font-weight: 700; }
-/* Grows to fill whatever space is left on the row next to mover/laggard/breadth.
-   The visible copy in renderRiskNote() is long enough on its own to fill that
-   width with real text instead of leaving empty pill background. */
-.stat-pill--risk {
-  flex: 1 1 260px;
+/* Concentration-risk pill is short ("Concentration risk: High") and content-
+   sized on purpose — the supporting math lives in its title tooltip instead
+   of stretching the pill's visible text. The AUM pill right after it (below)
+   is the one that grows to soak up the rest of the row. */
+.stat-pill--fill {
+  flex: 1 1 200px;
 }
 
 /* ---------------------------------- Charts ---------------------------------- */

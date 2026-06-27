@@ -462,8 +462,10 @@
 
   // Factual/descriptive only — states concentration math, doesn't tell the
   // user what to do about it (that would cross into investment advice).
-  // Lives as a 4th pill in the stat strip (condensed) rather than its own
-  // banner card, so it sits in the empty space next to mover/laggard/breadth.
+  // Kept to "Concentration risk: High" in the pill itself; the supporting
+  // math (top holding/top3/top sector weights) lives in the title tooltip
+  // instead of the visible text, so the pill stays short and doesn't need
+  // to stretch awkwardly to fill the row.
   function renderRiskNote(rows, totals) {
     const el = document.getElementById("statRiskNote");
     const okRows = rows.filter((r) => r.ok);
@@ -483,14 +485,22 @@
     });
     const topSectorEntry = Object.entries(sectorWeights).sort((a, b) => b[1] - a[1])[0];
 
-    el.innerHTML =
-      `Concentration risk: <strong class="risk-high">High</strong> — ${topHolding.ticker} ${topHolding.weight.toFixed(1)}%, ` +
-      `top 3 ${top3Weight.toFixed(1)}%, ${topSectorEntry[0]} ${topSectorEntry[1].toFixed(1)}% of NW`;
+    el.innerHTML = `Concentration risk: <strong class="risk-high">High</strong>`;
     el.title =
       `${topHolding.ticker} is the largest single position at ${topHolding.weight.toFixed(1)}% of net worth, the top 3 holdings ` +
       `make up ${top3Weight.toFixed(1)}%, and ${topSectorEntry[0]} alone accounts for ${topSectorEntry[1].toFixed(1)}% of the book ` +
       `— with only ${rows.length} equity positions total, this fund carries more idiosyncratic, sector-specific risk than a ` +
       `broadly diversified index.`;
+
+    // AUM pill — fund's starting capital (holdings.json / FUND.startingCapitalUsd),
+    // not the fluctuating live net worth, so it stays a fixed reference figure
+    // next to the risk pill and fills the rest of the row.
+    const aumEl = document.getElementById("statAum");
+    if (aumEl) {
+      const aumMillions = (window.FUND.startingCapitalUsd / 1_000_000).toFixed(1);
+      aumEl.textContent = `AUM: $${aumMillions}M`;
+      aumEl.title = `Starting capital of ${fmtUsd(window.FUND.startingCapitalUsd)} · source: holdings.json`;
+    }
   }
 
   /* ---------------------------------------------------------------------- */

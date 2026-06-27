@@ -344,19 +344,14 @@
       // ticker visually groups with its sector without adding another badge shape.
       const logoUrl = logoUrlFor(r.bigdata && r.bigdata.website);
       const logoImg = logoUrl ? `<img class="ticker-logo" src="${logoUrl}" alt="" onerror="this.remove()" />` : "";
+      // Ticker is clickable — opens the modal, where Risk Profile (beta/category) now
+      // lives instead of its own table column. See openModal() for that rendering.
       const tickerCell = `<span class="ticker-cell">${logoImg}<button class="ticker-btn" data-ticker="${r.ticker}" style="color:${sectorColor};">${r.ticker}</button></span>`;
-      // Risk Profile text (no bubble) uses RISK_COLORS — a palette kept deliberately
-      // distinct from SECTOR_COLORS/ticker colors so it never reads as a sector dupe.
-      const riskColor = RISK_COLORS[r.riskCategory] || "#94a3b8";
-      const riskBadge = r.riskCategory
-        ? `<span class="risk-badge" style="color:${riskColor};" title="Beta ${r.riskBeta.toFixed(2)} — source: Bigdata.com company tearsheet, pulled 2026-06-27">${r.riskCategory}</span>`
-        : `<span class="risk-badge risk-badge--unknown">&mdash;</span>`;
       if (r.ok) {
         tr.innerHTML = `
           <td>${tickerCell}</td>
           <td>${r.company}</td>
           <td>${sectorBadge}</td>
-          <td>${riskBadge}</td>
           <td class="num cell-mono">${r.shares.toLocaleString()}</td>
           <td class="num cell-mono">${fmtUsd(r.costBasis)}</td>
           <td class="num cell-mono">${fmtUsd(r.price)}</td>
@@ -370,7 +365,6 @@
           <td>${tickerCell}</td>
           <td>${r.company}</td>
           <td>${sectorBadge}</td>
-          <td>${riskBadge}</td>
           <td class="num cell-mono">${r.shares.toLocaleString()}</td>
           <td class="num cell-mono">${fmtUsd(r.costBasis)}</td>
           <td class="num cell-error" colspan="5">price unavailable — ${r.error || "live quote failed"}</td>
@@ -490,14 +484,10 @@
     const topSectorEntry = Object.entries(sectorWeights).sort((a, b) => b[1] - a[1])[0];
 
     el.innerHTML =
-      `Concentration risk: <strong class="risk-high">High</strong> — ` +
-      `${topHolding.ticker} ${topHolding.weight.toFixed(1)}%, top 3 ${top3Weight.toFixed(1)}% of NW, ` +
-      `${topSectorEntry[0]} ${topSectorEntry[1].toFixed(1)}%`;
-    el.title =
-      `This fund holds only ${rows.length} equity positions plus cash. ${topHolding.ticker} is the largest single position ` +
-      `at ${topHolding.weight.toFixed(1)}% of net worth, the top 3 holdings together make up ${top3Weight.toFixed(1)}%, and ` +
-      `${topSectorEntry[0]} accounts for ${topSectorEntry[1].toFixed(1)}% of the portfolio. A concentrated, sector-tilted ` +
-      `book like this carries more idiosyncratic and sector-specific risk than a broadly diversified index.`;
+      `Concentration risk: <strong class="risk-high">High</strong> — ${topHolding.ticker} is the largest single position at ` +
+      `${topHolding.weight.toFixed(1)}% of net worth, the top 3 holdings make up ${top3Weight.toFixed(1)}%, and ` +
+      `${topSectorEntry[0]} alone accounts for ${topSectorEntry[1].toFixed(1)}% of the book — with only ${rows.length} equity ` +
+      `positions total, this fund carries more idiosyncratic, sector-specific risk than a broadly diversified index.`;
   }
 
   /* ---------------------------------------------------------------------- */
@@ -1158,6 +1148,20 @@
     document.getElementById("modalShares").textContent = h.shares.toLocaleString();
     document.getElementById("modalCostBasis").textContent = fmtUsd(h.costBasis);
     document.getElementById("modalCostBasisAsOf").textContent = `cost basis as of ${h.costBasisDate} · source: holdings.json`;
+
+    // Risk Profile lives here (instead of its own table column) — category is a
+    // transparent bucketing of the real beta pulled from Bigdata.com, never guessed.
+    const riskProfileEl = document.getElementById("modalRiskProfile");
+    const riskSourceEl = document.getElementById("modalRiskSource");
+    if (h.risk) {
+      riskProfileEl.textContent = `${h.risk.category} (beta ${h.risk.beta.toFixed(2)})`;
+      riskProfileEl.style.color = RISK_COLORS[h.risk.category] || "var(--ink)";
+      riskSourceEl.textContent = `risk profile: beta-based category · source: Bigdata.com company tearsheet, as of ${h.risk.asOfUtc}`;
+    } else {
+      riskProfileEl.textContent = "not available";
+      riskProfileEl.style.color = "";
+      riskSourceEl.textContent = "risk profile not available";
+    }
 
     document.getElementById("modalProfileDesc").textContent = h.bigdata.description || "Company description not available.";
     const websiteEl = document.getElementById("modalProfileWebsite");

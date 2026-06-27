@@ -259,11 +259,11 @@ html, body {
 .stat-pill strong.pos { color: var(--green); }
 .stat-pill strong.neg { color: var(--red); }
 .stat-pill .risk-high { color: var(--red); font-weight: 700; }
-/* Sized to its own content like the other pills (an earlier flex-grow + right-align
-   version stretched this pill across the whole leftover row width, leaving a big
-   empty gap inside the pill itself — content-sized avoids that dead space). */
+/* Grows to fill whatever space is left on the row next to mover/laggard/breadth.
+   The visible copy in renderRiskNote() is long enough on its own to fill that
+   width with real text instead of leaving empty pill background. */
 .stat-pill--risk {
-  cursor: help;
+  flex: 1 1 260px;
 }
 
 /* ---------------------------------- Charts ---------------------------------- */
@@ -328,6 +328,21 @@ html, body {
 
 .chart-body { height: 260px; position: relative; }
 .chart-body--donut { height: 200px; }
+
+/* The Portfolio Value card sits next to the Allocation card (donut + legend),
+   which is often taller. The grid row stretches both cards to equal height,
+   but without this the chart canvas stayed fixed at 260px, leaving blank
+   space at the bottom of the shorter card. Flexing the card lets the chart
+   itself grow to use that leftover height instead of leaving it empty. */
+.chart-card--wide {
+  display: flex;
+  flex-direction: column;
+}
+.chart-card--wide .chart-body {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 260px;
+}
 
 /* Range selector chips — used on the Portfolio Value chart and the
    per-ticker modal price-history chart. */

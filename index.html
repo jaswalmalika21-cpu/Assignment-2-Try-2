@@ -6,7 +6,7 @@
 <title>Northpoint Growth Fund — Portfolio Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=12" />
+<link rel="stylesheet" href="assets/style.css?v=13" />
 </head>
 <body>
 
@@ -118,7 +118,6 @@
             <th data-sort="ticker">Ticker</th>
             <th data-sort="company">Company</th>
             <th data-sort="sector">Sector</th>
-            <th data-sort="riskCategory" title="Categorized from each stock's beta (Bigdata.com), a real volatility metric — not a guess">Risk Profile</th>
             <th data-sort="shares" class="num">Shares</th>
             <th data-sort="costBasis" class="num">Cost Basis</th>
             <th data-sort="price" class="num">Live Price</th>
@@ -189,9 +188,11 @@
       <div class="modal-stat"><span class="modal-stat-label">Previous Close</span><span class="modal-stat-value" id="modalPrevClose">&mdash;</span></div>
       <div class="modal-stat"><span class="modal-stat-label">Cost Basis</span><span class="modal-stat-value" id="modalCostBasis">&mdash;</span></div>
       <div class="modal-stat"><span class="modal-stat-label">Position Value</span><span class="modal-stat-value" id="modalPositionValue">&mdash;</span></div>
+      <div class="modal-stat"><span class="modal-stat-label">Risk Profile</span><span class="modal-stat-value" id="modalRiskProfile">&mdash;</span></div>
     </div>
     <div class="modal-source-tag" id="modalCostBasisAsOf">&nbsp;</div>
     <div class="modal-source-tag" id="modalQuoteSource">&nbsp;</div>
+    <div class="modal-source-tag" id="modalRiskSource">&nbsp;</div>
 
     <div class="modal-profile">
       <div class="chart-head">
@@ -208,6 +209,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="assets/holdings-data.js?v=8"></script>
-<script src="assets/app.js?v=13"></script>
+<script src="assets/app.js?v=14"></script>
 </body>
 </html>

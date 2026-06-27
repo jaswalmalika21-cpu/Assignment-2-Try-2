@@ -484,10 +484,13 @@
     const topSectorEntry = Object.entries(sectorWeights).sort((a, b) => b[1] - a[1])[0];
 
     el.innerHTML =
-      `Concentration risk: <strong class="risk-high">High</strong> — ${topHolding.ticker} is the largest single position at ` +
-      `${topHolding.weight.toFixed(1)}% of net worth, the top 3 holdings make up ${top3Weight.toFixed(1)}%, and ` +
-      `${topSectorEntry[0]} alone accounts for ${topSectorEntry[1].toFixed(1)}% of the book — with only ${rows.length} equity ` +
-      `positions total, this fund carries more idiosyncratic, sector-specific risk than a broadly diversified index.`;
+      `Concentration risk: <strong class="risk-high">High</strong> — ${topHolding.ticker} ${topHolding.weight.toFixed(1)}%, ` +
+      `top 3 ${top3Weight.toFixed(1)}%, ${topSectorEntry[0]} ${topSectorEntry[1].toFixed(1)}% of NW`;
+    el.title =
+      `${topHolding.ticker} is the largest single position at ${topHolding.weight.toFixed(1)}% of net worth, the top 3 holdings ` +
+      `make up ${top3Weight.toFixed(1)}%, and ${topSectorEntry[0]} alone accounts for ${topSectorEntry[1].toFixed(1)}% of the book ` +
+      `— with only ${rows.length} equity positions total, this fund carries more idiosyncratic, sector-specific risk than a ` +
+      `broadly diversified index.`;
   }
 
   /* ---------------------------------------------------------------------- */

@@ -243,6 +243,7 @@ html, body {
 .stat-strip {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
   gap: 10px;
   margin-bottom: 20px;
 }

@@ -232,12 +232,12 @@
   // Fetching 7 tickers' history at once can trip Twelve Data's free-tier rate
   // limit (transient — not a real "no data" situation). One retry after a
   // short pause resolves that without ever inventing a substitute price.
-  async function fetchHistoryRetrying(ticker, outputsize, interval = "1day", attempts = 3) {
+  async function fetchHistoryRetrying(ticker, outputsize, interval = "1day", attempts = 3, retryDelayMs = 1500) {
     let last;
     for (let i = 0; i < attempts; i++) {
       last = await fetchHistory(ticker, outputsize, interval).catch((e) => ({ ok: false, error: e.message }));
       if (last && last.ok) return last;
-      if (i < attempts - 1) await delay(1500);
+      if (i < attempts - 1) await delay(retryDelayMs);
     }
     return last;
   }
@@ -340,15 +340,16 @@
       const sectorColor = SECTOR_COLORS[r.sector] || "#94a3b8";
       const sectorSoft = hexToRgba(sectorColor, 0.16);
       const sectorBadge = `<span class="sector-badge" style="color:${sectorColor};background:${sectorSoft};">${r.sector}</span>`;
-      // Ticker badge background matches the holding's sector color (same palette as the
-      // sector badge/donut) with white text, so a ticker is visually grouped with its sector.
+      // Ticker text (no bubble) is colored with the holding's sector color, so a
+      // ticker visually groups with its sector without adding another badge shape.
       const logoUrl = logoUrlFor(r.bigdata && r.bigdata.website);
       const logoImg = logoUrl ? `<img class="ticker-logo" src="${logoUrl}" alt="" onerror="this.remove()" />` : "";
-      const tickerCell = `<span class="ticker-cell">${logoImg}<button class="ticker-btn" data-ticker="${r.ticker}" style="color:#fff;background:${sectorColor};">${r.ticker}</button></span>`;
+      const tickerCell = `<span class="ticker-cell">${logoImg}<button class="ticker-btn" data-ticker="${r.ticker}" style="color:${sectorColor};">${r.ticker}</button></span>`;
+      // Risk Profile text (no bubble) uses RISK_COLORS — a palette kept deliberately
+      // distinct from SECTOR_COLORS/ticker colors so it never reads as a sector dupe.
       const riskColor = RISK_COLORS[r.riskCategory] || "#94a3b8";
-      const riskSoft = hexToRgba(riskColor, 0.16);
       const riskBadge = r.riskCategory
-        ? `<span class="risk-badge" style="color:${riskColor};background:${riskSoft};" title="Beta ${r.riskBeta.toFixed(2)} — source: Bigdata.com company tearsheet, pulled 2026-06-27">${r.riskCategory}</span>`
+        ? `<span class="risk-badge" style="color:${riskColor};" title="Beta ${r.riskBeta.toFixed(2)} — source: Bigdata.com company tearsheet, pulled 2026-06-27">${r.riskCategory}</span>`
         : `<span class="risk-badge risk-badge--unknown">&mdash;</span>`;
       if (r.ok) {
         tr.innerHTML = `
@@ -511,14 +512,15 @@
     Cash: "#5a6478",
   };
 
-  // Risk Profile badge colors — category comes from each holding's real beta
+  // Risk Profile text colors — category comes from each holding's real beta
   // (Bigdata.com, see holdings-data.js), bucketed Defensive/Core/Growth-Risky.
-  // Colors reuse the existing green/amber/red palette already used for
-  // day-change/total-return so "risk" reads consistently across the page.
+  // Deliberately a separate palette from SECTOR_COLORS above (which the ticker
+  // text now reuses) so Risk Profile never reads as a duplicate/confusable
+  // color of the Sector column on the same row.
   const RISK_COLORS = {
-    Defensive: "#34d399",
-    Core: "#fbbf24",
-    "Growth/Risky": "#fb7185",
+    Defensive: "#38bdf8",
+    Core: "#fb923c",
+    "Growth/Risky": "#f43f5e",
   };
   // Distinct colors per individual holding for "Holding" allocation mode —
   // decorative palette, not brand colors (those are used on the ticker badges instead).
@@ -593,7 +595,7 @@
     const legend = document.getElementById("sectorLegend");
     legend.innerHTML = labels
       .map(
-        (l, i) => `<li><span class="swatch" style="background:${colors[i]}"></span>${l}<span class="legend-dollar">${fmtUsd(values[i], { maximumFractionDigits: 0 })}</span><span class="legend-pct">${((values[i] / total) * 100).toFixed(1)}%</span></li>`
+        (l, i) => `<li><span class="swatch" style="background:${colors[i]}"></span><span class="legend-label">${l}</span><span class="legend-figures"><span class="legend-pct">${((values[i] / total) * 100).toFixed(1)}%</span><span class="legend-dollar">${fmtUsd(values[i], { maximumFractionDigits: 0 })}</span></span></li>`
       )
       .join("");
     document.getElementById("allocationSource").textContent = "source: holdings.json / universe.csv taxonomy";
@@ -623,7 +625,7 @@
     const legend = document.getElementById("sectorLegend");
     legend.innerHTML = labels
       .map(
-        (l, i) => `<li><span class="swatch" style="background:${colors[i]}"></span>${l}<span class="legend-dollar">${fmtUsd(values[i], { maximumFractionDigits: 0 })}</span><span class="legend-pct">${((values[i] / total) * 100).toFixed(1)}%</span></li>`
+        (l, i) => `<li><span class="swatch" style="background:${colors[i]}"></span><span class="legend-label">${l}</span><span class="legend-figures"><span class="legend-pct">${((values[i] / total) * 100).toFixed(1)}%</span><span class="legend-dollar">${fmtUsd(values[i], { maximumFractionDigits: 0 })}</span></span></li>`
       )
       .join("");
     document.getElementById("allocationSource").textContent = "source: holdings.json (per-ticker market value)";
@@ -696,8 +698,14 @@
     if (valueChart1DLoadPromise) return valueChart1DLoadPromise;
     valueChart1DLoadPromise = (async () => {
       try {
+        // Intraday (1h) calls for all 7 tickers in a short burst were tripping
+        // Twelve Data's free-tier per-minute request limit on every refresh —
+        // that's why most tickers showed "unavailable" while the first one or
+        // two usually succeeded. Spacing dispatch further apart and giving
+        // retries more room/attempts keeps each call under that limit instead
+        // of inventing a fallback price for the ones that got rate-limited.
         const histories = await Promise.all(
-          TICKERS.map((t, i) => delay(i * 900).then(() => fetchHistoryRetrying(t, 10, "1h")))
+          TICKERS.map((t, i) => delay(i * 4000).then(() => fetchHistoryRetrying(t, 10, "1h", 4, 5000)))
         );
         const byTicker = {};
         histories.forEach((h, i) => (byTicker[TICKERS[i]] = h));

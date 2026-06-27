@@ -259,11 +259,10 @@ html, body {
 .stat-pill strong.pos { color: var(--green); }
 .stat-pill strong.neg { color: var(--red); }
 .stat-pill .risk-high { color: var(--red); font-weight: 700; }
-/* Risk pill takes whatever space is left on the row and right-aligns its text,
-   so it fills the empty space next to mover/laggard/breadth instead of wrapping early. */
+/* Sized to its own content like the other pills (an earlier flex-grow + right-align
+   version stretched this pill across the whole leftover row width, leaving a big
+   empty gap inside the pill itself — content-sized avoids that dead space). */
 .stat-pill--risk {
-  flex: 1 1 260px;
-  text-align: right;
   cursor: help;
 }
 
@@ -389,11 +388,30 @@ html, body {
   border-radius: 3px;
   flex-shrink: 0;
 }
-.legend .legend-pct {
+.legend .legend-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Stacked figures on the right: % on top, $ value on its own line beneath —
+   replaces the old layout where the dollar value sat beside the name. */
+.legend .legend-figures {
   margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.35;
+  flex-shrink: 0;
+}
+.legend .legend-pct {
   font-family: "Inter", sans-serif;
   font-weight: 600;
   color: var(--ink);
+}
+.legend .legend-dollar {
+  font-size: 11px;
+  color: var(--ink-faint);
 }
 
 /* ---------------------------------- Table ---------------------------------- */
@@ -450,15 +468,13 @@ tbody tr:hover { background: var(--card-hover); }
 .ticker-btn {
   font-family: "Inter", sans-serif;
   font-weight: 700;
-  color: var(--accent);
-  background: var(--accent-soft);
+  background: none;
   border: none;
-  border-radius: 6px;
-  padding: 4px 9px;
+  padding: 0;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 13.5px;
 }
-.ticker-btn:hover { filter: brightness(1.2); }
+.ticker-btn:hover { filter: brightness(1.25); text-decoration: underline; }
 
 .cell-mono { font-family: "Inter", sans-serif; }
 
@@ -472,16 +488,12 @@ tbody tr:hover { background: var(--card-hover); }
   white-space: nowrap;
 }
 .risk-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 100px;
-  font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 12.5px;
   white-space: nowrap;
   cursor: help;
 }
-.risk-badge--unknown { color: var(--ink-faint); background: rgba(255, 255, 255, 0.04); cursor: default; }
+.risk-badge--unknown { color: var(--ink-faint); cursor: default; }
 
 .pos { color: var(--green); font-weight: 600; }
 .neg { color: var(--red); font-weight: 600; }

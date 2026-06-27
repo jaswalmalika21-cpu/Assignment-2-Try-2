@@ -256,16 +256,21 @@ html, body {
   align-items: center;
   font-size: 15.5px;
   font-weight: 600;
+  letter-spacing: 0.02em;
+  word-spacing: 0.12em;
   color: var(--ink-soft);
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 100px;
   padding: 12px 20px;
 }
-.stat-pill strong { font-weight: 700; }
+/* Extra breathing room between the label and the bold value (e.g. "Top
+   mover:" and "MSFT +1.2%") so the two don't read as one squeezed-together
+   word/number block at the larger pill font size. */
+.stat-pill strong { font-weight: 700; margin-left: 5px; letter-spacing: 0.03em; }
 .stat-pill strong.pos { color: var(--green); }
 .stat-pill strong.neg { color: var(--red); }
-.stat-pill .risk-high { color: var(--red); font-weight: 700; }
+.stat-pill .risk-high { color: var(--red); font-weight: 700; margin-left: 5px; }
 /* Concentration-risk pill is short ("Concentration risk: High") and content-
    sized on purpose — the supporting math lives in its title tooltip instead
    of stretching the pill's visible text. The AUM pill right after it (below)

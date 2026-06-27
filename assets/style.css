@@ -243,18 +243,24 @@ html, body {
 .stat-strip {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 10px;
+  align-items: stretch;
+  gap: 12px;
   margin-bottom: 20px;
 }
+/* Bumped up from the original compact 12.5px pill so the row reads as a
+   real stat bar rather than tiny chips — also means the AUM pill's text
+   takes up more of its own flex-grown width instead of leaving empty
+   padding around a small string. */
 .stat-pill {
-  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  font-size: 15.5px;
   font-weight: 600;
   color: var(--ink-soft);
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 100px;
-  padding: 7px 14px;
+  padding: 12px 20px;
 }
 .stat-pill strong { font-weight: 700; }
 .stat-pill strong.pos { color: var(--green); }

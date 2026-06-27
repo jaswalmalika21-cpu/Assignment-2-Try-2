@@ -498,7 +498,7 @@
     const aumEl = document.getElementById("statAum");
     if (aumEl) {
       const aumMillions = (window.FUND.startingCapitalUsd / 1_000_000).toFixed(1);
-      aumEl.textContent = `AUM: $${aumMillions}M`;
+      aumEl.innerHTML = `AUM: <strong>$${aumMillions}M</strong>`;
       aumEl.title = `Starting capital of ${fmtUsd(window.FUND.startingCapitalUsd)} · source: holdings.json`;
     }
   }

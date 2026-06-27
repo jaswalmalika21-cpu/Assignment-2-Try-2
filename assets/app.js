@@ -219,10 +219,10 @@
   // is safe; failures are never cached, so a retry can still succeed later.
   const historyCache = {};
 
-  async function fetchHistory(ticker, outputsize) {
-    const cacheKey = `${ticker}_${outputsize}`;
+  async function fetchHistory(ticker, outputsize, interval = "1day") {
+    const cacheKey = `${ticker}_${outputsize}_${interval}`;
     if (historyCache[cacheKey]) return historyCache[cacheKey];
-    const res = await fetch(`/.netlify/functions/history?ticker=${encodeURIComponent(ticker)}&outputsize=${outputsize}`);
+    const res = await fetch(`/.netlify/functions/history?ticker=${encodeURIComponent(ticker)}&outputsize=${outputsize}&interval=${encodeURIComponent(interval)}`);
     if (!res.ok) throw new Error(`history endpoint returned HTTP ${res.status}`);
     const data = await res.json();
     if (data && data.ok) historyCache[cacheKey] = data;
@@ -232,10 +232,10 @@
   // Fetching 7 tickers' history at once can trip Twelve Data's free-tier rate
   // limit (transient — not a real "no data" situation). One retry after a
   // short pause resolves that without ever inventing a substitute price.
-  async function fetchHistoryRetrying(ticker, outputsize, attempts = 3) {
+  async function fetchHistoryRetrying(ticker, outputsize, interval = "1day", attempts = 3) {
     let last;
     for (let i = 0; i < attempts; i++) {
-      last = await fetchHistory(ticker, outputsize).catch((e) => ({ ok: false, error: e.message }));
+      last = await fetchHistory(ticker, outputsize, interval).catch((e) => ({ ok: false, error: e.message }));
       if (last && last.ok) return last;
       if (i < attempts - 1) await delay(1500);
     }
@@ -256,7 +256,9 @@
       const dayChangePct = ok ? q.percentChange : null;
       const totalReturnDollar = ok ? (price - h.costBasis) * h.shares : null;
       const totalReturnPct = ok ? ((price - h.costBasis) / h.costBasis) * 100 : null;
-      return { ...h, ok, price, marketValue, dayChangeDollar, dayChangePct, totalReturnDollar, totalReturnPct, error: q && q.error };
+      const riskBeta = h.risk ? h.risk.beta : null;
+      const riskCategory = h.risk ? h.risk.category : null;
+      return { ...h, ok, price, marketValue, dayChangeDollar, dayChangePct, totalReturnDollar, totalReturnPct, riskBeta, riskCategory, error: q && q.error };
     });
   }
 
@@ -335,20 +337,25 @@
     tbody.innerHTML = "";
     sorted.forEach((r) => {
       const tr = document.createElement("tr");
-      const rawBrand = BRAND_COLORS[r.ticker] || "#5b8cff";
-      const brand = readableBrand(rawBrand); // boosted-for-readability text color
-      const brandSoft = hexToRgba(rawBrand, 0.16); // tinted background keeps the true brand hue
-      const logoUrl = logoUrlFor(r.bigdata && r.bigdata.website);
-      const logoImg = logoUrl ? `<img class="ticker-logo" src="${logoUrl}" alt="" onerror="this.remove()" />` : "";
-      const tickerCell = `<span class="ticker-cell">${logoImg}<button class="ticker-btn" data-ticker="${r.ticker}" style="color:${brand};background:${brandSoft};">${r.ticker}</button></span>`;
       const sectorColor = SECTOR_COLORS[r.sector] || "#94a3b8";
       const sectorSoft = hexToRgba(sectorColor, 0.16);
       const sectorBadge = `<span class="sector-badge" style="color:${sectorColor};background:${sectorSoft};">${r.sector}</span>`;
+      // Ticker badge background matches the holding's sector color (same palette as the
+      // sector badge/donut) with white text, so a ticker is visually grouped with its sector.
+      const logoUrl = logoUrlFor(r.bigdata && r.bigdata.website);
+      const logoImg = logoUrl ? `<img class="ticker-logo" src="${logoUrl}" alt="" onerror="this.remove()" />` : "";
+      const tickerCell = `<span class="ticker-cell">${logoImg}<button class="ticker-btn" data-ticker="${r.ticker}" style="color:#fff;background:${sectorColor};">${r.ticker}</button></span>`;
+      const riskColor = RISK_COLORS[r.riskCategory] || "#94a3b8";
+      const riskSoft = hexToRgba(riskColor, 0.16);
+      const riskBadge = r.riskCategory
+        ? `<span class="risk-badge" style="color:${riskColor};background:${riskSoft};" title="Beta ${r.riskBeta.toFixed(2)} — source: Bigdata.com company tearsheet, pulled 2026-06-27">${r.riskCategory}</span>`
+        : `<span class="risk-badge risk-badge--unknown">&mdash;</span>`;
       if (r.ok) {
         tr.innerHTML = `
           <td>${tickerCell}</td>
           <td>${r.company}</td>
           <td>${sectorBadge}</td>
+          <td>${riskBadge}</td>
           <td class="num cell-mono">${r.shares.toLocaleString()}</td>
           <td class="num cell-mono">${fmtUsd(r.costBasis)}</td>
           <td class="num cell-mono">${fmtUsd(r.price)}</td>
@@ -362,6 +369,7 @@
           <td>${tickerCell}</td>
           <td>${r.company}</td>
           <td>${sectorBadge}</td>
+          <td>${riskBadge}</td>
           <td class="num cell-mono">${r.shares.toLocaleString()}</td>
           <td class="num cell-mono">${fmtUsd(r.costBasis)}</td>
           <td class="num cell-error" colspan="5">price unavailable — ${r.error || "live quote failed"}</td>
@@ -391,7 +399,7 @@
   function downloadHoldingsCsv(rows, totals) {
     const sorted = sortRows(rows, totals.netWorth);
     const headers = [
-      "Ticker", "Company", "Sector", "Shares", "Cost Basis", "Live Price",
+      "Ticker", "Company", "Sector", "Risk Profile", "Beta", "Shares", "Cost Basis", "Live Price",
       "Market Value", "Weight %", "Day Change $", "Day Change %", "Total Return $", "Total Return %",
     ];
     const csvEscape = (v) => {
@@ -401,7 +409,10 @@
     const lines = [headers.join(",")];
     sorted.forEach((r) => {
       lines.push([
-        r.ticker, r.company, r.sector, r.shares,
+        r.ticker, r.company, r.sector,
+        r.riskCategory || "",
+        r.riskBeta != null ? r.riskBeta.toFixed(3) : "",
+        r.shares,
         r.costBasis.toFixed(2),
         r.ok ? r.price.toFixed(2) : "",
         r.ok ? r.marketValue.toFixed(2) : "",
@@ -456,11 +467,13 @@
 
   // Factual/descriptive only — states concentration math, doesn't tell the
   // user what to do about it (that would cross into investment advice).
+  // Lives as a 4th pill in the stat strip (condensed) rather than its own
+  // banner card, so it sits in the empty space next to mover/laggard/breadth.
   function renderRiskNote(rows, totals) {
-    const el = document.getElementById("riskNote");
+    const el = document.getElementById("statRiskNote");
     const okRows = rows.filter((r) => r.ok);
     if (okRows.length === 0 || !totals.netWorth) {
-      el.textContent = "";
+      el.innerHTML = "&nbsp;";
       return;
     }
     const withWeight = okRows
@@ -476,11 +489,14 @@
     const topSectorEntry = Object.entries(sectorWeights).sort((a, b) => b[1] - a[1])[0];
 
     el.innerHTML =
-      `<span class="risk-high">Risk awareness: High</span> — ` +
-      `this fund holds only ${rows.length} equity positions plus cash — ${topHolding.ticker} is the largest single ` +
-      `position at ${topHolding.weight.toFixed(1)}% of net worth, the top 3 holdings together make up ${top3Weight.toFixed(1)}%, ` +
-      `and ${topSectorEntry[0]} accounts for ${topSectorEntry[1].toFixed(1)}% of the portfolio. A concentrated, ` +
-      `sector-tilted book like this carries more idiosyncratic and sector-specific risk than a broadly diversified index.`;
+      `Concentration risk: <strong class="risk-high">High</strong> — ` +
+      `${topHolding.ticker} ${topHolding.weight.toFixed(1)}%, top 3 ${top3Weight.toFixed(1)}% of NW, ` +
+      `${topSectorEntry[0]} ${topSectorEntry[1].toFixed(1)}%`;
+    el.title =
+      `This fund holds only ${rows.length} equity positions plus cash. ${topHolding.ticker} is the largest single position ` +
+      `at ${topHolding.weight.toFixed(1)}% of net worth, the top 3 holdings together make up ${top3Weight.toFixed(1)}%, and ` +
+      `${topSectorEntry[0]} accounts for ${topSectorEntry[1].toFixed(1)}% of the portfolio. A concentrated, sector-tilted ` +
+      `book like this carries more idiosyncratic and sector-specific risk than a broadly diversified index.`;
   }
 
   /* ---------------------------------------------------------------------- */
@@ -493,6 +509,16 @@
     Financials: "#34d399",
     "Consumer Staples": "#fbbf24",
     Cash: "#5a6478",
+  };
+
+  // Risk Profile badge colors — category comes from each holding's real beta
+  // (Bigdata.com, see holdings-data.js), bucketed Defensive/Core/Growth-Risky.
+  // Colors reuse the existing green/amber/red palette already used for
+  // day-change/total-return so "risk" reads consistently across the page.
+  const RISK_COLORS = {
+    Defensive: "#34d399",
+    Core: "#fbbf24",
+    "Growth/Risky": "#fb7185",
   };
   // Distinct colors per individual holding for "Holding" allocation mode —
   // decorative palette, not brand colors (those are used on the ticker badges instead).
@@ -567,7 +593,7 @@
     const legend = document.getElementById("sectorLegend");
     legend.innerHTML = labels
       .map(
-        (l, i) => `<li><span class="swatch" style="background:${colors[i]}"></span>${l}<span class="legend-pct">${((values[i] / total) * 100).toFixed(1)}%</span></li>`
+        (l, i) => `<li><span class="swatch" style="background:${colors[i]}"></span>${l}<span class="legend-dollar">${fmtUsd(values[i], { maximumFractionDigits: 0 })}</span><span class="legend-pct">${((values[i] / total) * 100).toFixed(1)}%</span></li>`
       )
       .join("");
     document.getElementById("allocationSource").textContent = "source: holdings.json / universe.csv taxonomy";
@@ -597,7 +623,7 @@
     const legend = document.getElementById("sectorLegend");
     legend.innerHTML = labels
       .map(
-        (l, i) => `<li><span class="swatch" style="background:${colors[i]}"></span>${l}<span class="legend-pct">${((values[i] / total) * 100).toFixed(1)}%</span></li>`
+        (l, i) => `<li><span class="swatch" style="background:${colors[i]}"></span>${l}<span class="legend-dollar">${fmtUsd(values[i], { maximumFractionDigits: 0 })}</span><span class="legend-pct">${((values[i] / total) * 100).toFixed(1)}%</span></li>`
       )
       .join("");
     document.getElementById("allocationSource").textContent = "source: holdings.json (per-ticker market value)";
@@ -634,12 +660,162 @@
 
   // Trading-day counts used to slice the tail of the fetched history.
   // "Max"/"Since Inception" always means the REAL fund history only (never
-  // before cost-basis date). 1D/1M/1Y use the unfiltered "All" series, which
+  // before cost-basis date). 1M/1Y use the unfiltered "All" series, which
   // is a clearly-labeled HYPOTHETICAL backtest: real historical closes for
   // these exact 7 tickers x today's actual share counts, run backward before
   // the fund existed — useful for "what would this basket have done," but
-  // never presented as the fund's actual track record.
-  const VALUE_RANGE_DAYS = { "1D": 1, "1M": 22, "1Y": 252, Max: Infinity };
+  // never presented as the fund's actual track record. 1D is handled
+  // separately below (real intraday hourly history, not a backtest).
+  const VALUE_RANGE_DAYS = { "1M": 22, "1Y": 252, Max: Infinity };
+
+  // ---- 1D intraday (hourly, real data — most recent trading session) ----
+  let valueChart1DLabels = [];   // formatted "9:30 AM" style labels
+  let valueChart1DSeries = [];
+  let valueChart1DDate = null;
+  let valueChart1DFailedTickers = [];
+  let valueChart1DError = null;
+  let valueChart1DLoaded = false;
+  let valueChart1DLoadPromise = null;
+
+  function formatTimeLabel(hhmm) {
+    const [hStr, mStr] = hhmm.split(":");
+    let h = parseInt(hStr, 10);
+    const ampm = h >= 12 ? "PM" : "AM";
+    let h12 = h % 12;
+    if (h12 === 0) h12 = 12;
+    return `${h12}:${mStr} ${ampm}`;
+  }
+
+  // Fetches hourly closes for the most recent trading session for all 7
+  // tickers and builds a portfolio-weighted intraday series. Fetched once
+  // and cached client-side (same rationale as the daily history cache) —
+  // re-fetched only on a full page reload, never invented if Twelve Data's
+  // intraday data is unavailable.
+  async function ensureIntraday1DLoaded() {
+    if (valueChart1DLoaded) return;
+    if (valueChart1DLoadPromise) return valueChart1DLoadPromise;
+    valueChart1DLoadPromise = (async () => {
+      try {
+        const histories = await Promise.all(
+          TICKERS.map((t, i) => delay(i * 900).then(() => fetchHistoryRetrying(t, 10, "1h")))
+        );
+        const byTicker = {};
+        histories.forEach((h, i) => (byTicker[TICKERS[i]] = h));
+
+        const okTickers = TICKERS.filter((t) => byTicker[t] && byTicker[t].ok && byTicker[t].points && byTicker[t].points.length);
+        valueChart1DFailedTickers = TICKERS.filter((t) => !okTickers.includes(t));
+
+        if (okTickers.length === 0) {
+          valueChart1DLabels = [];
+          valueChart1DSeries = [];
+          valueChart1DError = "Intraday history unavailable from Twelve Data right now — chart cannot be drawn.";
+          return;
+        }
+
+        // Most recent trading date present across the ok tickers (handles being
+        // viewed on a weekend/holiday — always shows the latest real session).
+        const latestDate = okTickers.reduce((max, t) => {
+          const pts = byTicker[t].points;
+          const d = pts[pts.length - 1].date;
+          return !max || d > max ? d : max;
+        }, null);
+
+        const dayPointsByTicker = {};
+        okTickers.forEach((t) => {
+          dayPointsByTicker[t] = byTicker[t].points.filter((p) => p.date === latestDate && p.time);
+        });
+
+        const timeSets = okTickers.map((t) => new Set(dayPointsByTicker[t].map((p) => p.time)));
+        let commonTimes = timeSets.length ? [...timeSets[0]].filter((tm) => timeSets.every((s) => s.has(tm))) : [];
+        commonTimes.sort();
+
+        if (commonTimes.length === 0) {
+          valueChart1DLabels = [];
+          valueChart1DSeries = [];
+          valueChart1DError = "No overlapping intraday timestamps returned across holdings for the most recent session.";
+          return;
+        }
+
+        const series = commonTimes.map((tm) => {
+          let total = window.FUND.cashUsd;
+          window.HOLDINGS.forEach((h) => {
+            if (okTickers.includes(h.ticker)) {
+              const pt = dayPointsByTicker[h.ticker].find((p) => p.time === tm);
+              total += (pt ? pt.close : h.costBasis) * h.shares; // missing single bar -> fall back to cost basis, never invent a price
+            } else {
+              total += h.costBasis * h.shares; // intraday fetch failed for this ticker -> fall back to cost basis
+            }
+          });
+          return total;
+        });
+
+        valueChart1DLabels = commonTimes.map(formatTimeLabel);
+        valueChart1DSeries = series;
+        valueChart1DDate = latestDate;
+        valueChart1DError = null;
+      } catch (e) {
+        valueChart1DError = `Could not load intraday history: ${e.message}`;
+        valueChart1DLabels = [];
+        valueChart1DSeries = [];
+      } finally {
+        valueChart1DLoaded = true;
+        valueChart1DLoadPromise = null;
+      }
+    })();
+    return valueChart1DLoadPromise;
+  }
+
+  function draw1DChart() {
+    const note = document.getElementById("valueChartNote");
+    const sourceTag = document.getElementById("valueChartSource");
+    const ctx = document.getElementById("valueChart").getContext("2d");
+    const existingValueChart = Chart.getChart(ctx.canvas);
+    if (existingValueChart) existingValueChart.destroy();
+
+    if (!valueChart1DLabels.length) {
+      sourceTag.textContent = "source: Twelve Data (hourly close)";
+      note.textContent = valueChart1DError || "Intraday history unavailable from Twelve Data right now.";
+      return;
+    }
+
+    sourceTag.textContent = "source: Twelve Data (hourly close) · weighted by holdings.json shares";
+    valueChartInstance = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: valueChart1DLabels,
+        datasets: [
+          {
+            data: valueChart1DSeries,
+            borderColor: "#5b8cff",
+            backgroundColor: hexToRgba("#5b8cff", 0.14),
+            fill: true,
+            tension: 0.25,
+            pointRadius: valueChart1DLabels.length <= 4 ? 4 : 0,
+            pointHoverRadius: 5,
+            borderWidth: 2,
+          },
+        ],
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (c) => fmtUsd(c.raw) } },
+        },
+        scales: {
+          x: { offset: false, grid: { display: false }, ticks: { maxRotation: 0, autoSkip: false, font: { size: 11 } } },
+          y: { ticks: { callback: (v) => fmtUsd(v, { maximumFractionDigits: 0 }) }, grid: { display: false } },
+        },
+        animation: { duration: 250 },
+      },
+    });
+
+    let noteText = `Hourly close for ${valueChart1DDate} (most recent trading session) — ${valueChart1DLabels.length} bars, regular trading hours (9:30am–4:00pm ET).`;
+    if (valueChart1DFailedTickers.length > 0) {
+      noteText += ` ${valueChart1DFailedTickers.join(", ")} intraday history unavailable — chart reflects the remaining holdings only.`;
+    }
+    note.textContent = noteText;
+  }
 
   async function renderValueChart(rows) {
     const note = document.getElementById("valueChartNote");
@@ -794,6 +970,14 @@
     let activeBtnGotDisabled = false;
     document.querySelectorAll("#valueRangeRow .range-btn").forEach((btn) => {
       const range = btn.dataset.range;
+      // 1D is real intraday history, fetched lazily on click — it isn't
+      // gated by the daily-close history depth checked below, and its
+      // tooltip must not say "hypothetical backtest" (that's 1M/1Y only).
+      if (range === "1D") {
+        btn.disabled = false;
+        btn.title = "Real intraday hourly history for the most recent trading session (9:30am–4:00pm ET) — not a backtest.";
+        return;
+      }
       const needed = VALUE_RANGE_DAYS[range];
       const daysAvailable = range === "Max" ? realDaysAvailable : allDaysAvailable;
       const locked = needed !== Infinity && needed > 1 && daysAvailable < needed;
@@ -815,13 +999,22 @@
     }
   }
 
-  document.getElementById("valueRangeRow").addEventListener("click", (e) => {
+  document.getElementById("valueRangeRow").addEventListener("click", async (e) => {
     const btn = e.target.closest(".range-btn");
     if (!btn || btn.disabled) return;
     document.querySelectorAll("#valueRangeRow .range-btn").forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     valueChartRange = btn.dataset.range;
-    drawValueChart(valueChartRange);
+    if (valueChartRange === "1D") {
+      // Real intraday hourly history (most recent session) — separate code
+      // path from drawValueChart, which only ever handles daily-close data.
+      const note = document.getElementById("valueChartNote");
+      note.textContent = "Loading intraday history…";
+      await ensureIntraday1DLoaded();
+      draw1DChart();
+    } else {
+      drawValueChart(valueChartRange);
+    }
   });
 
   /* ---------------------------------------------------------------------- */

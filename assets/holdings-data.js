@@ -16,6 +16,16 @@
    Netlify functions backed by Finnhub and Twelve Data (see netlify/functions).
    Every value rendered in the UI carries a source tag so nothing baked-in
    is ever shown as if it were live.
+
+   "risk" blocks below hold each holding's BETA — a real, sourced volatility
+   metric (price sensitivity vs. the market) pulled live from the Bigdata.com
+   company tearsheet (company_overview.beta) on 2026-06-27. This is a later,
+   separate pull from the 2026-06-24 "bigdata" snapshot above — note the
+   different as-of date. No risk score here is guessed; "category" is a
+   transparent bucketing of that real beta value using fixed thresholds:
+     beta < 0.90        -> "Defensive"   (less volatile than the market)
+     0.90 <= beta <= 1.30 -> "Core"        (close to market volatility)
+     beta > 1.30         -> "Growth/Risky" (notably more volatile than the market)
    ========================================================================== */
 
 const FUND = {
@@ -34,6 +44,7 @@ const HOLDINGS = [
     shares: 574,
     costBasis: 372.97,
     costBasisDate: "2026-06-26",
+    risk: { beta: 1.103, category: "Core", asOfUtc: "2026-06-27T04:46:50Z" },
     bigdata: {
       asOfUtc: "2026-06-24T20:00:03Z",
       sectorBigdata: "Technology",
@@ -51,6 +62,7 @@ const HOLDINGS = [
     shares: 492,
     costBasis: 337.39,
     costBasisDate: "2026-06-26",
+    risk: { beta: 1.237, category: "Core", asOfUtc: "2026-06-27T04:46:51Z" },
     bigdata: {
       asOfUtc: "2026-06-24T20:00:02Z",
       sectorBigdata: "Communication Services",
@@ -68,6 +80,7 @@ const HOLDINGS = [
     shares: 511,
     costBasis: 336.23,
     costBasisDate: "2026-06-26",
+    risk: { beta: 0.765, category: "Defensive", asOfUtc: "2026-06-27T04:46:52Z" },
     bigdata: {
       asOfUtc: "2026-06-24T20:00:03Z",
       sectorBigdata: "Financial Services",
@@ -85,6 +98,7 @@ const HOLDINGS = [
     shares: 479,
     costBasis: 329.05,
     costBasisDate: "2026-06-26",
+    risk: { beta: 1.0, category: "Core", asOfUtc: "2026-06-27T04:46:53Z" },
     bigdata: {
       asOfUtc: "2026-06-24T20:00:02Z",
       sectorBigdata: "Financial Services",
@@ -102,6 +116,7 @@ const HOLDINGS = [
     shares: 156,
     costBasis: 952.54,
     costBasisDate: "2026-06-26",
+    risk: { beta: 0.868, category: "Defensive", asOfUtc: "2026-06-27T04:46:54Z" },
     bigdata: {
       asOfUtc: "2026-06-24T20:00:02Z",
       sectorBigdata: "Consumer Defensive", // bigdata's taxonomy label for this sector differs from universe.csv's "Consumer Staples" — same bucket, different naming. See reflection.
@@ -119,6 +134,7 @@ const HOLDINGS = [
     shares: 276,
     costBasis: 192.53,
     costBasisDate: "2026-06-26",
+    risk: { beta: 2.202, category: "Growth/Risky", asOfUtc: "2026-06-27T04:46:55Z" },
     bigdata: {
       asOfUtc: "2026-06-24T20:00:03Z",
       sectorBigdata: "Technology",
@@ -136,6 +152,7 @@ const HOLDINGS = [
     shares: 91,
     costBasis: 365.02,
     costBasisDate: "2026-06-26",
+    risk: { beta: 1.433, category: "Growth/Risky", asOfUtc: "2026-06-27T04:46:56Z" },
     bigdata: {
       asOfUtc: "2026-06-24T20:00:02Z",
       sectorBigdata: "Technology",

@@ -258,6 +258,14 @@ html, body {
 .stat-pill strong { font-weight: 700; }
 .stat-pill strong.pos { color: var(--green); }
 .stat-pill strong.neg { color: var(--red); }
+.stat-pill .risk-high { color: var(--red); font-weight: 700; }
+/* Risk pill takes whatever space is left on the row and right-aligns its text,
+   so it fills the empty space next to mover/laggard/breadth instead of wrapping early. */
+.stat-pill--risk {
+  flex: 1 1 260px;
+  text-align: right;
+  cursor: help;
+}
 
 /* ---------------------------------- Charts ---------------------------------- */
 
@@ -463,6 +471,18 @@ tbody tr:hover { background: var(--card-hover); }
   font-weight: 600;
   white-space: nowrap;
 }
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: help;
+}
+.risk-badge--unknown { color: var(--ink-faint); background: rgba(255, 255, 255, 0.04); cursor: default; }
+
 .pos { color: var(--green); font-weight: 600; }
 .neg { color: var(--red); font-weight: 600; }
 .cell-error { color: var(--red); font-weight: 600; font-size: 12px; }
@@ -487,23 +507,6 @@ tbody tr:hover { background: var(--card-hover); }
   transition: background 0.15s ease, color 0.15s ease;
 }
 .csv-btn:hover { background: var(--card-hover); color: var(--ink); }
-
-.risk-banner-card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 14px 20px;
-  box-shadow: var(--shadow);
-  margin-bottom: 20px;
-}
-
-.risk-note {
-  font-size: 12px;
-  line-height: 1.55;
-  color: var(--ink-faint);
-  margin: 0;
-}
-.risk-note .risk-high { color: var(--red); font-weight: 700; }
 
 /* ---------------------------------- Disclaimer ---------------------------------- */
 

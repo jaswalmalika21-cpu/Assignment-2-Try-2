@@ -6,7 +6,7 @@
 <title>Northpoint Growth Fund — Portfolio Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=10" />
+<link rel="stylesheet" href="assets/style.css?v=11" />
 </head>
 <body>
 
@@ -68,6 +68,7 @@
     <span class="stat-pill" id="statTopMover">Top mover: &mdash;</span>
     <span class="stat-pill" id="statTopLaggard">Top laggard: &mdash;</span>
     <span class="stat-pill" id="statUpCount">&mdash; of &mdash; holdings up today</span>
+    <span class="stat-pill stat-pill--risk" id="statRiskNote">&nbsp;</span>
   </section>
 
   <!-- ============================== CHARTS ============================== -->
@@ -100,11 +101,6 @@
     </div>
   </section>
 
-  <!-- ============================== RISK CALLOUT ============================== -->
-  <section class="risk-banner-card">
-    <p class="risk-note" id="riskNote"></p>
-  </section>
-
   <!-- ============================== HOLDINGS TABLE ============================== -->
   <section class="table-card">
     <div class="chart-head">
@@ -122,6 +118,7 @@
             <th data-sort="ticker">Ticker</th>
             <th data-sort="company">Company</th>
             <th data-sort="sector">Sector</th>
+            <th data-sort="riskCategory" title="Categorized from each stock's beta (Bigdata.com), a real volatility metric — not a guess">Risk Profile</th>
             <th data-sort="shares" class="num">Shares</th>
             <th data-sort="costBasis" class="num">Cost Basis</th>
             <th data-sort="price" class="num">Live Price</th>
@@ -210,7 +207,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="assets/holdings-data.js?v=7"></script>
-<script src="assets/app.js?v=10"></script>
+<script src="assets/holdings-data.js?v=8"></script>
+<script src="assets/app.js?v=12"></script>
 </body>
 </html>
